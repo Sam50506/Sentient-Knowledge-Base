@@ -13,20 +13,23 @@ const yesBtn = document.getElementById("yesBtn");
 const noBtn = document.getElementById("noBtn");
 const copyBtn = document.getElementById("copyBtn");
 
-function showError(msg){
+function showError(msg) {
   errorText.textContent = msg;
   errorArea.style.display = "block";
   responseArea.style.display = "none";
 }
 
-function clearError(){
+function clearError() {
   errorArea.style.display = "none";
 }
 
 generateBtn.addEventListener("click", async () => {
   clearError();
   const q = ideaInput.value.trim();
-  if (!q){ showError("Please enter a question"); return; }
+  if (!q) { 
+    showError("Please enter a question"); 
+    return; 
+  }
 
   generateBtn.disabled = true;
   generateBtn.textContent = "Thinking...";
@@ -38,31 +41,46 @@ generateBtn.addEventListener("click", async () => {
       body: JSON.stringify({ question: q })
     });
 
+    // Check if response is ok
+    if (!res.ok) {
+      const errorData = await res.json();
+      showError(errorData.error || `Server error: ${res.status}`);
+      generateBtn.disabled = false;
+      generateBtn.textContent = "Ask";
+      return;
+    }
+
     const data = await res.json();
 
-    if (data.error){
+    // Check for error in response data
+    if (data.error) {
       showError(data.error);
       generateBtn.disabled = false;
       generateBtn.textContent = "Ask";
       return;
     }
 
+    // Display the answer
     shortAnswer.textContent = data.short_answer || "No answer available";
     expandedAnswer.textContent = data.expanded_answer || "";
 
     responseArea.style.display = "block";
-    expandBtn.style.display = data.expanded_answer ? "inline-block" : "none";
+    
+    // Hide expand button since worker doesn't return expanded_answer
+    expandBtn.style.display = "none"; // Changed from conditional since expanded_answer is always empty
+    expandedAnswer.style.display = "none"; // Start collapsed
 
-  } catch(err){
-    showError(err.message);
+  } catch (err) {
+    showError(`Network error: ${err.message}`);
+  } finally {
+    // Always re-enable button
+    generateBtn.disabled = false;
+    generateBtn.textContent = "Ask";
   }
-
-  generateBtn.disabled = false;
-  generateBtn.textContent = "Ask";
 });
 
-expandBtn.addEventListener("click", ()=>{
-  if (expandedAnswer.style.display === "none"){
+expandBtn.addEventListener("click", () => {
+  if (expandedAnswer.style.display === "none") {
     expandedAnswer.style.display = "block";
     expandBtn.textContent = "Collapse";
   } else {
@@ -71,7 +89,29 @@ expandBtn.addEventListener("click", ()=>{
   }
 });
 
-copyBtn.addEventListener("click", ()=>{
-  const text = shortAnswer.textContent + "\n\n" + expandedAnswer.textContent;
-  navigator.clipboard.writeText(text);
+copyBtn.addEventListener("click", () => {
+  const shortText = shortAnswer.textContent;
+  const expandedText = expandedAnswer.textContent;
+  
+  // Only include expanded if it exists
+  const text = expandedText ? `${shortText}\n\n${expandedText}` : shortText;
+  
+  navigator.clipboard.writeText(text).then(() => {
+    // Visual feedback
+    const originalText = copyBtn.textContent;
+    copyBtn.textContent = "Copied!";
+    setTimeout(() => {
+      copyBtn.textContent = originalText;
+    }, 2000);
+  }).catch(err => {
+    console.error("Failed to copy:", err);
+    alert("Failed to copy to clipboard");
+  });
+});
+
+// Optional: Allow Enter key to submit
+ideaInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter" && !generateBtn.disabled) {
+    generateBtn.click();
+  }
 });

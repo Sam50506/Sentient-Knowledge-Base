@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sentient Knowledge Base</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <div class="brand">
+        <img src="https://i.postimg.cc/9fMR74q0/20250904-032927.png" alt="Sentient Logo" class="logo">
+        <div class="brand-text">
+          <div class="title">Sentient Knowledge Base</div>
+          <div class="subtitle">Ask about Roma, TGE, tokenomics, agents</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="search-section">
+        <label for="ideaInput" class="sr-only">Ask a question</label>
+        <div class="search-row">
+          <input id="ideaInput" class="search-input" placeholder="Ask about Roma, TGE, tokenomics, agents…" />
+          <button id="generateBtn" class="btn primary">Ask</button>
+        </div>
+        <div class="hint">Tip: try “How do I join Roma testnet?” or “When is TGE?”</div>
+      </section>
+
+      <section id="responseArea" class="response-area" aria-live="polite" style="display:none;">
+        <div class="response-card">
+          <div class="response-short" id="shortAnswer"></div>
+          <button id="expandBtn" class="btn ghost small">Expand</button>
+          <div class="response-expanded" id="expandedAnswer" style="display:none;"></div>
+
+          <div class="sources" id="sourcesList"></div>
+
+          <div class="response-actions">
+            <button id="yesBtn" class="btn ghost small">Helpful</button>
+            <button id="noBtn" class="btn ghost small">Not helpful</button>
+            <button id="copyBtn" class="btn small">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="errorArea" class="error-area" style="display:none;">
+        <div id="errorText" class="error-text"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>Built for Sentient community • Frontend: GitHub Pages • Backend: Cloudflare Worker</div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

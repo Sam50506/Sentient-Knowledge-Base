@@ -1,15 +1,14 @@
 const WORKER_URL = "https://sentient.samhere5202.workers.dev";
+
 const ideaInput = document.getElementById("ideaInput");
 const generateBtn = document.getElementById("generateBtn");
 const shortAnswer = document.getElementById("shortAnswer");
 const expandedAnswer = document.getElementById("expandedAnswer");
 const expandBtn = document.getElementById("expandBtn");
 const responseArea = document.getElementById("responseArea");
-const sourcesList = document.getElementById("sourcesList");
 const errorArea = document.getElementById("errorArea");
 const errorText = document.getElementById("errorText");
-const yesBtn = document.getElementById("yesBtn");
-const noBtn = document.getElementById("noBtn");
+const sourcesList = document.getElementById("sourcesList");
 const copyBtn = document.getElementById("copyBtn");
 
 function showError(msg) {
@@ -24,10 +23,10 @@ function clearError() {
 
 generateBtn.addEventListener("click", async () => {
   clearError();
-  const question = ideaInput.value.trim();
-  if (!question) {
-    showError("Please enter a question first.");
-    ideaInput.focus();
+  const q = ideaInput.value.trim();
+
+  if (!q) {
+    showError("Please enter a question");
     return;
   }
 
@@ -38,44 +37,36 @@ generateBtn.addEventListener("click", async () => {
     const res = await fetch(WORKER_URL + "/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question: q })
     });
 
     if (!res.ok) {
-      const msg = await res.text().catch(() => "");
-      throw new Error(msg || "Request failed");
+      const t = await res.text().catch(() => null);
+      throw new Error(t || "Request failed");
     }
 
     const data = await res.json();
 
-    shortAnswer.textContent = data.short_answer || "";
+    shortAnswer.textContent = data.short_answer || "No answer available.";
     expandedAnswer.textContent = data.expanded_answer || "";
+    expandedAnswer.style.display = "none";
 
     sourcesList.innerHTML = "";
     if (Array.isArray(data.sources)) {
-      data.sources.forEach(src => {
-        const div = document.createElement("div");
+      data.sources.forEach(s => {
         const link = document.createElement("a");
-        link.href = src.link || "#";
+        link.href = s.link;
         link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = src.title || src.link || "source";
-        div.appendChild(link);
-        sourcesList.appendChild(div);
+        link.textContent = s.title;
+        sourcesList.appendChild(link);
       });
     }
 
-    responseArea.style.display = "block";
-    expandedAnswer.style.display = "none";
     expandBtn.style.display = data.expanded_answer ? "inline-block" : "none";
-
-    window.scrollTo({
-      top: responseArea.offsetTop - 20,
-      behavior: "smooth"
-    });
+    responseArea.style.display = "block";
 
   } catch (err) {
-    showError("Something went wrong: " + err.message);
+    showError(err.message);
   } finally {
     generateBtn.disabled = false;
     generateBtn.textContent = "Ask";
@@ -93,32 +84,9 @@ expandBtn.addEventListener("click", () => {
 });
 
 copyBtn.addEventListener("click", () => {
-  const text =
-    shortAnswer.textContent +
-    "\n\n" +
-    (expandedAnswer.style.display === "block" ? expandedAnswer.textContent : "");
-
+  const text = shortAnswer.textContent + "\n\n" + expandedAnswer.textContent;
   navigator.clipboard.writeText(text).then(() => {
-    copyBtn.textContent = "Copied!";
+    copyBtn.textContent = "Copied";
     setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
   });
 });
-
-async function sendFeedback(helpful) {
-  try {
-    await fetch(WORKER_URL + "/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: ideaInput.value.trim(),
-        helpful,
-        timestamp: new Date().toISOString()
-      })
-    });
-  } catch {}
-}
-
-yesBtn.addEventListener("click", () => sendFeedback(true));
-noBtn.addEventListener("click", () => sendFeedback(false));
-
-window.addEventListener("load", () => ideaInput.focus());

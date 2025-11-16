@@ -1,5 +1,4 @@
 const WORKER_URL = "https://sentient.samhere5202.workers.dev";
-
 const ideaInput = document.getElementById("ideaInput");
 const generateBtn = document.getElementById("generateBtn");
 const shortAnswer = document.getElementById("shortAnswer");
